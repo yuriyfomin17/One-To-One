@@ -13,7 +13,7 @@ public class PostDataGenerator {
 
     public static PostDetails createPostDetails(){
         PostDetails postDetails = new PostDetails();
-        postDetails.setVisible(true);
+        postDetails.setVisible(false);
         return postDetails;
     }
 }
