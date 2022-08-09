@@ -20,12 +20,18 @@ public class PostDaoImpl implements PostDao {
         performWithinPersistentContext(entityManager -> entityManager.persist(post));
     }
 
+    @Override
+    public void savePostDetails(PostDetails postDetails) {
+        performWithinPersistentContext(entityManager -> entityManager.persist(postDetails));
+    }
+
 
     @Override
     public Post savePostDetails(long postId, PostDetails postDetails) {
         return performReturningWithinPersistentContext(entityManager -> {
             Post post = entityManager.find(Post.class, postId);
-            post.addPostDetails(postDetails);
+            postDetails.setPost(post);
+            entityManager.persist(postDetails);
             return post;
         });
     }

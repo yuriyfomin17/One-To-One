@@ -61,12 +61,17 @@ public class PostDaoTest {
         Post randomPost = PostDataGenerator.createRandomPost();
         PostDetails randomPostDetails = PostDataGenerator.createPostDetails();
 
-        randomPost.addPostDetails(randomPostDetails);
-        postDao.savePost(randomPost);
+        randomPostDetails.setPost(randomPost);
+        postDao.savePostDetails(randomPostDetails);
 
         assertThat(randomPostDetails.getId(), notNullValue());
 
-        postDao.deletePost(randomPost);
+        emUtil.performWithinTx(entityManager -> {
+            Post managedPost = entityManager.find(Post.class, randomPost.getId());
+            PostDetails managedPostDetails = entityManager.find(PostDetails.class, randomPostDetails.getId());
+            entityManager.remove(managedPostDetails);
+            entityManager.remove(managedPost);
+        });
         Post deletedPost = emUtil.performReturningWithinTx(entityManager -> entityManager.find(Post.class, randomPost.getId()));
         PostDetails deletedPostDetails = emUtil.performReturningWithinTx(entityManager -> entityManager.find(PostDetails.class, randomPostDetails.getId()));
         assertThat(deletedPost, nullValue());
@@ -83,15 +88,15 @@ public class PostDaoTest {
         postDao.savePost(randomPost);
         Post managedPost = postDao.savePostDetails(randomPost.getId(), randomPostDetails);
         assertThat(managedPost.getId(), notNullValue());
-        System.out.println("Post details ID: " + managedPost.getPostDetails().getId());
+        System.out.println("Post details ID: " + randomPostDetails.getPost().getId());
 
         managedPost.setName("My Post for Yuriy");
-        managedPost.getPostDetails().setVisible(true);
+        randomPostDetails.setVisible(true);
 
         Post updatedPost = postDao.updatePost(managedPost);
 
         assertThat(updatedPost.getName(), equalTo("My Post for Yuriy"));
-        assertThat(updatedPost.getPostDetails().isVisible(), equalTo(true));
+        assertThat(randomPostDetails.isVisible(), equalTo(true));
 
     }
 
@@ -100,15 +105,19 @@ public class PostDaoTest {
         Post randomPost = PostDataGenerator.createRandomPost();
         PostDetails randomPostDetails = PostDataGenerator.createPostDetails();
 
-        randomPost.addPostDetails(randomPostDetails);
-        Post post = postDao.updatePost(randomPost);
+        randomPostDetails.setPost(randomPost);
         emUtil.performWithinTx(entityManager -> {
-            Post managedPost = entityManager.find(Post.class, post.getId());
-            managedPost.removePostDetails();
+            entityManager.persist(randomPostDetails);
+            entityManager.persist(randomPost);
+        });
+        emUtil.performWithinTx(entityManager -> {
+            PostDetails managedPostDetails = entityManager.find(PostDetails.class, randomPostDetails.getId());
+            entityManager.remove(managedPostDetails);
+
         });
 
-        Post updatedPost = emUtil.performReturningWithinTx(entityManager -> entityManager.find(Post.class, post.getId()));
-        assertThat(updatedPost.getPostDetails(), nullValue());
+        PostDetails updatedPostDetails = emUtil.performReturningWithinTx(entityManager -> entityManager.find(PostDetails.class, randomPostDetails.getId()));
+        assertThat(updatedPostDetails, nullValue());
     }
 
     @Test
@@ -116,11 +125,11 @@ public class PostDaoTest {
         Post randomPost = PostDataGenerator.createRandomPost();
         PostDetails randomPostDetails = PostDataGenerator.createPostDetails();
 
-        randomPost.addPostDetails(randomPostDetails);
-        Post post = postDao.updatePost(randomPost);
-
-        post.removePostDetails();
-        Post updatedPost = postDao.updatePost(post);
-        assertThat(updatedPost.getPostDetails(), nullValue() );
+        randomPostDetails.setPost(randomPost);
+        postDao.savePostDetails(randomPostDetails);
+        emUtil.performWithinTx(entityManager -> {
+            PostDetails managedPostDetails = entityManager.find(PostDetails.class, randomPostDetails.getId());
+            entityManager.remove(managedPostDetails);
+        });
     }
 }

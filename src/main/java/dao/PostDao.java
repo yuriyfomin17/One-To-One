@@ -10,6 +10,11 @@ public interface PostDao {
     void savePost(Post post);
 
     /**
+     * Receives a new instance of {@link PostDetails} and saves it
+     */
+    void savePostDetails(PostDetails post);
+
+    /**
      * Receives a new instance of {@link PostDetails} , post id and saves it
      */
     Post savePostDetails(long postId, PostDetails postDetails);
